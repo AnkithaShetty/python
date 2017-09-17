@@ -38,9 +38,8 @@ def probability_for_bigrams(tokens, unigram_count):
 
 def nested_bigram(bigrams, start_word):
     x_bigrams = {}
-    print("previous word sent" + start_word)
-    new_dic = {(x1, y1): value for (x1,y1), value in bigrams.items() if y1 == start_word}
-    for ((x, y), value) in new_dic.items():
+    bigram_dict = {(x1, y1): value for (x1,y1), value in bigrams.items() if y1 == start_word}
+    for ((x, y), value) in bigram_dict.items():
         x_bigrams[x] = value
     return x_bigrams
 
@@ -57,10 +56,7 @@ def generate_bigrams_random_sentence(sentence_length, start_word, tokens, unigra
             i += 1
             x_bigrams = nested_bigram(bigrams, next_word)
             next_word = max(x_bigrams, key=x_bigrams.get)
-            print("nextword " + next_word)
-            #next_word = "".join(choice(list(x_bigrams.keys()), 1, x_bigrams.values()))
             list_words.append(next_word)
-            #print("random word" + next_word)
     return " ".join(list_words)
 
 
@@ -85,10 +81,10 @@ def main():
     unigram_with_seeding = generate_unigram_random_sentence(5, "with", unigram_frequency, total_tokens)
     print("Unigram with seeding -> " + unigram_with_seeding)
 
-    bigram_sentence_with_seeding = generate_bigrams_random_sentence(5, "the", tokens, unigram_count)
+    bigram_sentence_with_seeding = generate_bigrams_random_sentence(5, "purely", tokens, unigram_count)
     print("Bigram with seeding - > " + bigram_sentence_with_seeding)
 
-    bigram_sentence_without_seeding = generate_bigrams_random_sentence(5, None,tokens, unigram_count)
+    bigram_sentence_without_seeding = generate_bigrams_random_sentence(5, None, tokens, unigram_count)
     print("Bigram without seedinhg -> " + bigram_sentence_without_seeding)
 
 
