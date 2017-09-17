@@ -38,7 +38,9 @@ def probability_for_bigrams(tokens, unigram_count):
 
 def nested_bigram(bigrams, start_word):
     x_bigrams = {}
-    for ((x, start_word), value) in bigrams.items():
+    print("previous word sent" + start_word)
+    new_dic = {(x1, y1): value for (x1,y1), value in bigrams.items() if y1 == start_word}
+    for ((x, y), value) in new_dic.items():
         x_bigrams[x] = value
     return x_bigrams
 
@@ -54,8 +56,11 @@ def generate_bigrams_random_sentence(sentence_length, start_word, tokens, unigra
         for i in range(sentence_length - 1):
             i += 1
             x_bigrams = nested_bigram(bigrams, next_word)
-            next_word = "".join(choice(list(x_bigrams.keys()), 1, x_bigrams.values()))
+            next_word = max(x_bigrams, key=x_bigrams.get)
+            print("nextword " + next_word)
+            #next_word = "".join(choice(list(x_bigrams.keys()), 1, x_bigrams.values()))
             list_words.append(next_word)
+            #print("random word" + next_word)
     return " ".join(list_words)
 
 
