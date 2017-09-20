@@ -39,6 +39,7 @@ def ngram_frequency_builder(tokens):
     #print(new_dict)
 
     total_tokens = sum(unigram_frequency.values())
+    print(total_tokens)
     return unigram_frequency, total_tokens
 
 
@@ -61,7 +62,7 @@ def generate_unigram_random_sentence(sentence_length, start_word, unigram_freque
 def probability_for_bigrams(tokens, unigram_count):
     bigrams = {}
     for index, token in enumerate(tokens):
-        if index < len(tokens)-1:
+        if index < len(tokens) -1:
             w1 = tokens[index + 1]
             w2 = tokens[index]
             bigram = (w1, w2)
@@ -79,7 +80,7 @@ def probability_for_bigrams(tokens, unigram_count):
 
 def nested_bigram(bigrams, start_word):
     x_bigrams = {}
-    bigram_dict = {(x1, y1): value for (x1,y1), value in bigrams.items() if y1 == start_word}
+    bigram_dict = {(x1, y1): value for (x1, y1), value in bigrams.items() if y1 == start_word}
     for ((x, y), value) in bigram_dict.items():
         x_bigrams[x] = value
     return x_bigrams
@@ -102,18 +103,20 @@ def generate_bigrams_random_sentence(sentence_length, start_word, tokens, unigra
 
 
 def handle_unknowns(unigram_frequency, held_out_tokens):
-    #print(sum(unigram_frequency.values()))
     unigram_frequency["UNK"] = 0
     for token in held_out_tokens:
         if token not in unigram_frequency:
             unigram_frequency["UNK"] +=1
+        else:
+            unigram_frequency[token] +=1
 
     total_tokens = sum(unigram_frequency.values())
-
+    unigrams_count = dict(unigram_frequency)
     #retraining with unknowns
     for word in unigram_frequency:
         unigram_frequency[word] = unigram_frequency[word] / float(total_tokens)
-    return unigram_frequency
+    print(unigram_frequency["UNK"])
+    return unigram_frequency, unigrams_count
 
 
 def get_GoodTuring_counts(unigram_frequency, tokens):
@@ -128,7 +131,7 @@ def get_GoodTuring_counts(unigram_frequency, tokens):
         if value < 6:
             bigrams_count_list[value] += 1
 
-    print(bigrams_count_list)
+    #print(bigrams_count_list)
     goodTuring_counts = [0, 0, 0, 0, 0]
     for x in range(0, 5):
         goodTuring_counts[x] = (x+1) * (bigrams_count_list[x+1] * 1.0000) / (bigrams_count_list[x] * 1.0000)
@@ -146,15 +149,29 @@ def get_Good_Turing_probability(w1, w2, unigram_frequency, tokens, GT_counts):
         adj_count = GT_counts[adj_count]
     if w1 in unigram_frequency.keys():
         t = adj_count / (unigram_frequency[w1] * 1.0)
-        print(t)
+        #print(t)
     else:
         t = adj_count / (unigram_frequency["UNK"] * 1.0)
-        print(t)
+        #print(t)
     return t
+    #get_Good_Turing_probability("Ankita", "Nayan", unigram_frequency_pos_unk,tokens_pos,GT_counts)
 
 
-def calculate_perplexity(tokens):
-    pass
+def calculate_perplexity(test_token, unigrams_count, tokens, GT_count):
+    import math
+    #print(unigrams_count[test_token[0]])
+    total_tokens = len(tokens)
+    len_token = len(test_token)
+    for i in range(0, len_token, 1):
+        if test_token[i] not in unigrams_count:
+            test_token[i] = u'UNK'
+
+        sum = math.log(unigrams_count[test_token[0]] * 1.0 / total_tokens) * (-1.0)
+        for x in range(0, len_token - 1):
+            prob = get_Good_Turing_probability(test_token[x], test_token[x + 1], unigrams_count, tokens, GT_count)
+            sum += ((math.log(prob)) * (-1))
+
+        return math.exp((sum / len_token))
 
 def main():
     file_path_training_pos = "D:\PythonProjects\SentimentAnalysis\input\Train\pos.txt"
@@ -171,8 +188,8 @@ def main():
     #unigram_count_neg = dict(unigram_frequency_neg)
 
 
-    unigram_without_seeding = generate_unigram_random_sentence(5, None, unigram_frequency_pos, total_tokens_pos)
-    print("Unigram without seeding  for postive corpus-> " + unigram_without_seeding)
+    #unigram_without_seeding = generate_unigram_random_sentence(5, None, unigram_frequency_pos, total_tokens_pos)
+    #print("Unigram without seeding  for postive corpus-> " + unigram_without_seeding)
     """
     unigram_without_seeding = generate_unigram_random_sentence(5, None, unigram_frequency_neg, total_tokens_neg)
     print("Unigram without seeding  for negative corpus-> " + unigram_without_seeding)
@@ -202,7 +219,7 @@ def main():
     held_out_tokens_pos = default_tokenizer(file_path_held_out_pos)
     #held_out_tokens_neg = default_tokenizer(file_path_held_out_neg)
 
-    unigram_frequency_pos_unk = handle_unknowns(unigram_frequency_pos, held_out_tokens_pos)
+    unigram_frequency_pos_unk, unigram_count_pos_unk = handle_unknowns(unigram_frequency_pos, held_out_tokens_pos)
     #unigram_frequency_neg_unk = handle_unknowns(unigram_frequency _neg, held_out_tokens_neg)
 
     #unigram_frequency_pos_unk, total_tokens_pos = ngram_frequency_builder(tokens_pos)
@@ -210,8 +227,21 @@ def main():
 
     #unigram_frequency_neg_unk, total_tokens_neg = ngram_frequency_builder(tokens_neg)
 
-    GT_counts = get_GoodTuring_counts(unigram_frequency_pos_unk, tokens_pos)
-    get_Good_Turing_probability("Ankita", "Nayan", unigram_frequency_pos_unk,tokens_pos,GT_counts )
+    #GT_counts = get_GoodTuring_counts(unigram_frequency_pos_unk, tokens_pos)
+    #get_Good_Turing_probability("Ankita", "Nayan", unigram_frequency_pos_unk,tokens_pos,GT_counts)
+
+    #test_bigram = ["most","part"]
+
+
+    """
+
+    print(bigrams_count)
+
+    bigrams, bigrams_count_unk, bigrams_frequency = probability_for_bigrams(tokens_with_unknown, unigram_count_pos_unk)
+    print(bigrams_count_unk)
+    #perplexity_score = calculate_perplexity(test_bigram, unigram_frequency_pos_unk, tokens_pos, GT_counts)
+    #print(perplexity_score)
+     """
 
 if __name__ == "__main__":
         main()
